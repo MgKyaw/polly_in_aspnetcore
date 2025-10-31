@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36414.22 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Polly.Customer", "Polly.Customer\Polly.Customer.csproj", "{B407F44D-95F7-4DF3-84B3-774B96E31DCD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Polly.Order", "..\Polly.Order\Polly.Order.csproj", "{E90ADE64-28E2-463D-B8B7-1B8F64D713DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{B407F44D-95F7-4DF3-84B3-774B96E31DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B407F44D-95F7-4DF3-84B3-774B96E31DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B407F44D-95F7-4DF3-84B3-774B96E31DCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E90ADE64-28E2-463D-B8B7-1B8F64D713DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E90ADE64-28E2-463D-B8B7-1B8F64D713DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E90ADE64-28E2-463D-B8B7-1B8F64D713DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E90ADE64-28E2-463D-B8B7-1B8F64D713DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
