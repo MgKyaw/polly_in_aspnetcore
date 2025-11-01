@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly.Fallback;
 using Polly.Order.Models;
 using Polly.Retry;
+using Polly.Timeout;
 
 namespace Polly.Order.Controllers;
 
@@ -11,6 +13,9 @@ public class OrderController : ControllerBase
     private readonly ILogger<OrderController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly RetryPolicy _retryPolicy;
+    private static TimeoutPolicy _timeoutPolicy;
+    private readonly FallbackPolicy<string> _fallbackPolicy;
+
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
 
@@ -23,6 +28,12 @@ public class OrderController : ControllerBase
         _retryPolicy = Policy
             .Handle<Exception>()
             .Retry(2);
+
+        _timeoutPolicy = Policy.Timeout(20, TimeoutStrategy.Pessimistic);
+
+        _fallbackPolicy = Policy<string>
+                        .Handle<Exception>()
+                        .Fallback("Customer Name Not Available - Please retry later");
 
         if (_orderDetails == null)
         {
@@ -62,6 +73,43 @@ public class OrderController : ControllerBase
         _httpClient.BaseAddress = new Uri(apiurl);
         var uri = "/api/Customer/GetCustomerNameWithTempFailure/" + customerCode;
         var result = _retryPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithTimeout/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithTimeout(int customerCode)
+    {
+        try
+        {
+            _httpClient = _httpClientFactory.CreateClient();
+            _httpClient.BaseAddress = new Uri(apiurl);
+            var uri = "/api/Customer/GetCustomerNameWithDelay/" + customerCode;
+            var result = _timeoutPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+            _orderDetails.CustomerName = result;
+
+            return _orderDetails;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Excpetion Occurred");
+            _orderDetails.CustomerName = "Customer Name Not Available as of Now";
+            return _orderDetails;
+        }
+    }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithFallback/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithFallback(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerNameWithPermFailure/" + customerCode;
+        var result = _fallbackPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
 
         _orderDetails.CustomerName = result;
 

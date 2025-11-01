@@ -55,4 +55,31 @@ public class CustomerController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
+
+    [HttpGet]
+    [Route("GetCustomerNameWithDelay/{customerCode}")]
+    public ActionResult<string> GetCustomerNameWithDelay(int customerCode)
+    {
+        Thread.Sleep(new TimeSpan(0, 2, 0));
+        if (_customerNameDict != null && _customerNameDict.ContainsKey(customerCode))
+        {
+            return _customerNameDict[customerCode];
+        }
+        return "Customer Not Found";
+    }
+
+    [HttpGet]
+    [Route("GetCustomerNameWithPermFailure/{customerCode}")]
+    public ActionResult<string> GetCustomerNameWithPermFailure(int customerCode)
+    {
+        try
+        {
+            throw new Exception("Database Not Available");
+        }
+        catch
+        {
+            //Log Error
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 }
