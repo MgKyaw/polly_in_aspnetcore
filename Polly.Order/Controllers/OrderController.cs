@@ -101,4 +101,18 @@ public class OrderController : ControllerBase
             return _orderDetails;
         }
     }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithFallback/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithFallback(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerNameWithPermFailure/" + customerCode;
+        var result = _fallbackPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
 }
