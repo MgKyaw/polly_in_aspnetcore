@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly.Fallback;
 using Polly.Order.Models;
 using Polly.Retry;
 using Polly.Timeout;
@@ -13,6 +14,8 @@ public class OrderController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly RetryPolicy _retryPolicy;
     private static TimeoutPolicy _timeoutPolicy;
+    private readonly FallbackPolicy<string> _fallbackPolicy;
+
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
 
@@ -27,6 +30,10 @@ public class OrderController : ControllerBase
             .Retry(2);
 
         _timeoutPolicy = Policy.Timeout(20, TimeoutStrategy.Pessimistic);
+
+        _fallbackPolicy = Policy<string>
+                        .Handle<Exception>()
+                        .Fallback("Customer Name Not Available - Please retry later");
 
         if (_orderDetails == null)
         {
