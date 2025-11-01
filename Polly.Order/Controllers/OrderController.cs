@@ -53,4 +53,18 @@ public class OrderController : ControllerBase
 
         return _orderDetails;
     }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithRetry/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithRetry(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerNameWithTempFailure/" + customerCode;
+        var result = _retryPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
 }
