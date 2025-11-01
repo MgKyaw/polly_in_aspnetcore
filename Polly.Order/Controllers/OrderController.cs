@@ -10,7 +10,7 @@ public class OrderController : ControllerBase
     private readonly ILogger<OrderController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private HttpClient _httpClient;
-    private string apiurl = @"http://localhost:23833/";
+    private string apiurl = @"http://localhost:5043/";
 
     private OrderDetails _orderDetails = null;
     public OrderController(ILogger<OrderController> logger, IHttpClientFactory httpClientFactory)
