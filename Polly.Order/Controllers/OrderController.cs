@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Polly.Order.Models;
 using Polly.Retry;
+using Polly.Timeout;
 
 namespace Polly.Order.Controllers;
 
@@ -11,6 +12,7 @@ public class OrderController : ControllerBase
     private readonly ILogger<OrderController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly RetryPolicy _retryPolicy;
+    private static TimeoutPolicy _timeoutPolicy;
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
 
@@ -23,6 +25,8 @@ public class OrderController : ControllerBase
         _retryPolicy = Policy
             .Handle<Exception>()
             .Retry(2);
+
+        _timeoutPolicy = Policy.Timeout(20, TimeoutStrategy.Pessimistic);
 
         if (_orderDetails == null)
         {
