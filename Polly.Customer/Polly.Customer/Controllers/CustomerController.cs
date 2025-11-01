@@ -30,4 +30,29 @@ public class CustomerController : ControllerBase
         }
         return "Customer Not Found";
     }
+
+    [HttpGet]
+    [Route("GetCustomerNameWithTempFailure/{customerCode}")]
+    public ActionResult<string> GetCustomerNameWithTempFailure(int customerCode)
+    {
+        try
+        {
+            Random rnd = new Random();
+            int randomError = rnd.Next(1, 11);  // creates a number between 1 and 10
+
+            if (randomError % 2 == 0)
+                throw new Exception();
+
+            if (_customerNameDict != null && _customerNameDict.ContainsKey(customerCode))
+            {
+                return _customerNameDict[customerCode];
+            }
+            return "Customer Not Found";
+        }
+        catch
+        {
+            //Log Error
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 }
