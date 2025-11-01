@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Polly.Order.Models;
+using Polly.Retry;
 
 namespace Polly.Order.Controllers;
 
@@ -9,6 +10,7 @@ public class OrderController : ControllerBase
 {
     private readonly ILogger<OrderController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly RetryPolicy _retryPolicy;
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
 
@@ -17,6 +19,10 @@ public class OrderController : ControllerBase
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+
+        _retryPolicy = Policy
+            .Handle<Exception>()
+            .Retry(2);
 
         if (_orderDetails == null)
         {
