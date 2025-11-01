@@ -67,4 +67,19 @@ public class CustomerController : ControllerBase
         }
         return "Customer Not Found";
     }
+
+    [HttpGet]
+    [Route("GetCustomerNameWithPermFailure/{customerCode}")]
+    public ActionResult<string> GetCustomerNameWithPermFailure(int customerCode)
+    {
+        try
+        {
+            throw new Exception("Database Not Available");
+        }
+        catch
+        {
+            //Log Error
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
 }
