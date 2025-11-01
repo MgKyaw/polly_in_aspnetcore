@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Polly.Order.Models;
+using Polly.Retry;
 
 namespace Polly.Order.Controllers;
 
@@ -9,14 +10,19 @@ public class OrderController : ControllerBase
 {
     private readonly ILogger<OrderController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly RetryPolicy _retryPolicy;
     private HttpClient _httpClient;
-    private string apiurl = @"http://localhost:23833/";
+    private string apiurl = @"http://localhost:5043/";
 
     private OrderDetails _orderDetails = null;
     public OrderController(ILogger<OrderController> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+
+        _retryPolicy = Policy
+            .Handle<Exception>()
+            .Retry(2);
 
         if (_orderDetails == null)
         {
@@ -42,6 +48,20 @@ public class OrderController : ControllerBase
         _httpClient.BaseAddress = new Uri(apiurl);
         var uri = "/api/Customer/GetCustomerName/" + customerCode;
         var result = _httpClient.GetStringAsync(uri).Result;
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithRetry/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithRetry(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerNameWithTempFailure/" + customerCode;
+        var result = _retryPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
 
         _orderDetails.CustomerName = result;
 
