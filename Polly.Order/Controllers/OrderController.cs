@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly.Bulkhead;
+using Polly.CircuitBreaker;
 using Polly.Fallback;
 using Polly.Order.Models;
 using Polly.Retry;
@@ -15,6 +17,8 @@ public class OrderController : ControllerBase
     private readonly RetryPolicy _retryPolicy;
     private static TimeoutPolicy _timeoutPolicy;
     private readonly FallbackPolicy<string> _fallbackPolicy;
+    private static CircuitBreakerPolicy _circuitBreakerPolicy;
+    private static BulkheadPolicy _bulkheadPolicy;
 
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
@@ -34,6 +38,11 @@ public class OrderController : ControllerBase
         _fallbackPolicy = Policy<string>
                         .Handle<Exception>()
                         .Fallback("Customer Name Not Available - Please retry later");
+
+        _circuitBreakerPolicy = Policy.Handle<Exception>()
+                                        .CircuitBreaker(2, TimeSpan.FromMinutes(1));
+
+        _bulkheadPolicy = Policy.Bulkhead(3, 6);
 
         if (_orderDetails == null)
         {
@@ -110,6 +119,42 @@ public class OrderController : ControllerBase
         _httpClient.BaseAddress = new Uri(apiurl);
         var uri = "/api/Customer/GetCustomerNameWithPermFailure/" + customerCode;
         var result = _fallbackPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithCircuitBreaker/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithCircuitBreaker(int customerCode)
+    {
+        try
+        {
+            _httpClient = _httpClientFactory.CreateClient();
+            _httpClient.BaseAddress = new Uri(apiurl);
+            var uri = "/api/Customer/GetCustomerNameWithPermFailure/" + customerCode;
+            var result = _circuitBreakerPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+            _orderDetails.CustomerName = result;
+            return _orderDetails;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception Occurred");
+            _orderDetails.CustomerName = "Customer Name Not Available as of Now";
+            return _orderDetails;
+        }
+    }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithBulkHead/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithBulkHead(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerName/" + customerCode;
+        var result = _bulkheadPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
 
         _orderDetails.CustomerName = result;
 
