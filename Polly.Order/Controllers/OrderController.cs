@@ -120,4 +120,26 @@ public class OrderController : ControllerBase
 
         return _orderDetails;
     }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithCircuitBreaker/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithCircuitBreaker(int customerCode)
+    {
+        try
+        {
+            _httpClient = _httpClientFactory.CreateClient();
+            _httpClient.BaseAddress = new Uri(apiurl);
+            var uri = "/api/Customer/GetCustomerNameWithPermFailure/" + customerCode;
+            var result = _circuitBreakerPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+            _orderDetails.CustomerName = result;
+            return _orderDetails;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Excpetion Occurred");
+            _orderDetails.CustomerName = "Customer Name Not Available as of Now";
+            return _orderDetails;
+        }
+    }
 }
