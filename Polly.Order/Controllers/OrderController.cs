@@ -137,7 +137,7 @@ public class OrderController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Excpetion Occurred");
+            _logger.LogError(ex, "Exception Occurred");
             _orderDetails.CustomerName = "Customer Name Not Available as of Now";
             return _orderDetails;
         }
