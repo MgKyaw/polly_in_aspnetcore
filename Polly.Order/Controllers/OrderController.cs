@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly.Bulkhead;
 using Polly.CircuitBreaker;
 using Polly.Fallback;
 using Polly.Order.Models;
@@ -17,6 +18,7 @@ public class OrderController : ControllerBase
     private static TimeoutPolicy _timeoutPolicy;
     private readonly FallbackPolicy<string> _fallbackPolicy;
     private static CircuitBreakerPolicy _circuitBreakerPolicy;
+    private static BulkheadPolicy _bulkheadPolicy;
 
     private HttpClient _httpClient;
     private string apiurl = @"http://localhost:5043/";
@@ -39,6 +41,8 @@ public class OrderController : ControllerBase
 
         _circuitBreakerPolicy = Policy.Handle<Exception>()
                                         .CircuitBreaker(2, TimeSpan.FromMinutes(1));
+
+        _bulkheadPolicy = Policy.Bulkhead(3, 6);
 
         if (_orderDetails == null)
         {
