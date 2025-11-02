@@ -146,4 +146,18 @@ public class OrderController : ControllerBase
             return _orderDetails;
         }
     }
+
+    [HttpGet]
+    [Route("GetOrderByCustomerWithBulkHead/{customerCode}")]
+    public OrderDetails GetOrderByCustomerWithBulkHead(int customerCode)
+    {
+        _httpClient = _httpClientFactory.CreateClient();
+        _httpClient.BaseAddress = new Uri(apiurl);
+        var uri = "/api/Customer/GetCustomerName/" + customerCode;
+        var result = _bulkheadPolicy.Execute(() => _httpClient.GetStringAsync(uri).Result);
+
+        _orderDetails.CustomerName = result;
+
+        return _orderDetails;
+    }
 }
